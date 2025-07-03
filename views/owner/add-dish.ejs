@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Add Dish</title>
+  <link rel="stylesheet" href="/styles.css" />
+   <link rel="icon" type="image/x-icon" href="/images/favicon.ico" />
+</head>
+<body>
+  <header class="restaurant-header">
+    <div class="logo-container">
+      <div class="menu-icon-block" onclick="toggleDropdown()">
+        <span class="menu-icon">☰</span>
+      </div>
+      <img src="/images/Lakshya_logo.jpg" alt="LakshyaFiesta Logo" class="logo" />
+      <h1 class="restaurant-name">LakshyaFiesta Owner Dashboard</h1>
+    </div>
+    
+    <nav class="dropdown" id="dropdownMenu">
+      <a href="/owner/owner-dashboard">DashBoard</a>
+      <a href="/owner/add-staff">Add Staff</a>
+      
+      <a href="/owner/manage-staff">Manage Staff</a>
+      
+      <a href="/owner/logout">Logout</a>
+    </nav>
+  </header>
+  <h2 style="text-align: center;">Add New Dish</h2>
+
+  <% if (error) { %>
+    <p style="color:red;text-align: center;
+  font-size: 1rem;
+  margin: 10px auto;"><%= error %></p>
+  <% } %>
+  <% if (success) { %>
+    <p style="color:green;text-align: center;
+  font-size: 1rem;
+  margin: 10px auto;"><%= success %></p>
+  <% } %>
+
+  <form action="/owner/add-dish" method="POST" class="form-box" enctype="multipart/form-data">
+    <label for="category">Category:</label>
+<select name="category" id="category" required>
+  <option value="" disabled selected>Select a category</option>
+  <option value="Soups">Soups</option>
+  <option value="Starters">Starters</option>
+  <option value="Biryani">Biryani</option>
+  <option value="Meals">Meals</option>
+  <option value="Veg Meals">Veg Meals</option>
+  <option value="Soft Drinks / Juices">Soft Drinks / Juices</option>
+  <option value="Roti">Roti</option>
+  <option value="Breads">Breads</option>
+  <option value="Desserts">Desserts</option>
+</select>
+<br><br>
+
+    <label>Dish Name:</label>
+    <input type="text" name="name" required /><br><br>
+
+    <label>Price:</label>
+    <input type="number" name="price" required /><br><br>
+
+    <label>Image:</label>
+  <input type="file" name="image" accept="image/*" required />
+
+    <button type="submit">Add Dish</button>
+  </form>
+
+
+  <h3 style="text-align: center; font-size:   2em;">All Dishes</h3>
+<table class="dish-table">
+  <thead>
+    <tr>
+      <th>Dish No</th>
+      <th>Category</th>
+      <th>Name</th>
+      <th>Price</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% dishes.forEach(d => { %>
+      <tr>
+        <td><%= d.dishNo %></td>
+        <td><%= d.category %></td>
+        <td><%= d.name %></td>
+        <td>₹<%= d.price %></td>
+        <td>
+          <button class="edit-btn" onclick="openUpdatePopup('<%= d._id %>')">Update</button>
+          <form action="/owner/delete-dish/<%= d._id %>" method="POST" style="display:inline;">
+            <button class="delete-btn" type="submit">Delete</button>
+          </form>
+        </td>
+      </tr>
+    <% }) %>
+  </tbody>
+</table>
+
+
+
+<div id="updatePopup" class="popup-overlay" style="display:none;">
+  <div class="popup-box">
+    <span class="close-btn" onclick="closePopup()">⛌</span>
+    <h3>Update Dish</h3>
+    <form id="updateForm" method="POST">
+      <label>Category:</label>
+      <select name="category" required>
+        <option value="Soups">Soups</option>
+        <option value="Starters">Starters</option>
+        <option value="Biryani">Biryani</option>
+        <option value="Meals">Meals</option>
+        <option value="Veg Meals">Veg Meals</option>
+        <option value="Soft Drinks / Juices">Soft Drinks / Juices</option>
+        <option value="Roti">Roti</option>
+        <option value="Breads">Breads</option>
+        <option value="Desserts">Desserts</option>
+      </select><br><br>
+      <label>Dish Name:</label>
+      <input type="text" name="name" required /><br><br>
+      <label>Price:</label>
+      <input type="number" name="price" required /><br><br>
+      <button type="submit">Save Changes</button>
+    </form>
+  </div>
+</div>
+
+  <script src="/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Owner Dashboard - LakshyaFiesta</title>
+  <link rel="stylesheet" href="/styles.css" />
+  <link rel="icon" type="image/x-icon" href="/images/favicon.ico" />
+</head>
+<body>
+  <header class="restaurant-header">
+    <div class="logo-container">
+      <div class="menu-icon-block" onclick="toggleDropdown()">
+        <span class="menu-icon">☰</span>
+      </div>
+      <img src="/images/Lakshya_logo.jpg" alt="LakshyaFiesta Logo" class="logo" />
+      <h1 class="restaurant-name">LakshyaFiesta Owner Dashboard</h1>
+    </div>
+    
+    <nav class="dropdown" id="dropdownMenu">
+      <a href="/owner/add-staff">Add Staff</a>
+      <a href="/owner/add-dish">Add Dish</a>
+      <a href="/owner/manage-staff">Manage Staff</a>
+
+      <a href="/owner/logout">Logout</a>
+    </nav>
+  </header>
+
+  <!-- Add dashboard content here -->
+
+
+<section class="table-section">
+  <!-- Active Tables -->
+ <!-- Active Tables -->
+<h2>Active Tables</h2>
+<div class="table-grid active"></div>
+<p id="no-active-msg" class="status-msg" style="font-weight: bold;text-align:center; color: gray;"></p>
+
+</br></br>
+  <hr />
+<!-- ✅ Empty Tables -->
+<h2>Empty Tables</h2>
+<div class="table-grid empty"></div>
+ <p id="no-empty-msg" class="status-msg" style="font-weight: bold;text-align:center; color: gray;"></p>
+
+
+
+  <form action="/owner/add-table" method="POST" style="margin-top: 20px;">
+    <button type="submit" class="add-table-btn"> Add New Table</button>
+  </form>
+</section>
+
+
+<div id="orderPopup" class="popup-overlay" style="display: none;">
+  <div class="popup-box dish-popup" style="max-height: 90vh; overflow-y: auto; position: relative; display: flex; flex-direction: column;">
+    <button class="close-popup" onclick="closeOrderPopup()">✖</button>
+    <h2 style="text-align:center;">🍽 Ordered Dishes</h2>
+
+    <!-- Dishes List -->
+    <div id="orderContent" class="selected-dishes" style="flex: 1 1 auto;"></div>
+
+    <!-- Bill Button -->
+    <div style="text-align: center; margin-top: 20px;">
+      <button id="billButton" class="place-order-btn" style="display: none;" onclick="generateBill()">💵 Generate Bill</button>
+    </div>
+  </div>
+</div>
+
+
+
+   <footer class="footer">
+  <div class="footer-container">
+    <div class="footer-left">
+      <h3>Lakshya Fiesta</h3>
+      <p>Serving love on every plate since day one.</p>
+    </div>
+
+    <div class="footer-center">
+      <p><strong>📞</strong> +91 81859 51583</p>
+      <p><strong>📧</strong> lakshyasunkara2004@gmail.com</p>
+      <p><strong>📍</strong> MG Road, Hyderabad, India</p>
+    </div>
+
+    <div class="footer-right">
+      <h4>Connect with Us</h4>
+      <div class="social-icons">
+        <a href="https://wa.me/918185951583" target="_blank" title="WhatsApp"><i class="fab fa-whatsapp"></i></a>
+        <a href="https://instagram.com/lakshya_fiesta" target="_blank" title="Instagram"><i class="fab fa-instagram"></i></a>
+        <a href="https://twitter.com/lakshya_fiesta" target="_blank" title="X"><i class="fab fa-x-twitter"></i></a>
+      </div>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>© 2025 Lakshya Fiesta. All rights reserved.</p>
+  </div>
+</footer>
+  
+ <script>
+    async function fetchTableData() {
+      try {
+        const res = await fetch('/api/tables');
+        const tables = await res.json();
+
+        const activeGrid = document.querySelector(".table-grid.active");
+        const emptyGrid = document.querySelector(".table-grid.empty");
+        const noActive = document.getElementById("no-active-msg");
+        const noEmpty = document.getElementById("no-empty-msg");
+
+        activeGrid.innerHTML = '';
+        emptyGrid.innerHTML = '';
+        noActive.textContent = '';
+        noEmpty.textContent = '';
+
+        const activeTables = tables.filter(t => t.status !== 'empty');
+        const emptyTables = tables.filter(t => t.status === 'empty');
+
+        if (activeTables.length === 0) {
+          noActive.textContent = "✅ All tables are currently empty.";
+        }
+
+        if (emptyTables.length === 0) {
+          noEmpty.textContent = "🚫 All tables are active.";
+        }
+
+        activeTables.forEach(t => {
+          const card = document.createElement("div");
+          card.className = `table-card ${t.status}`;
+          card.onclick = () => showOrderPopup(t._id);
+
+          const img = t.serverImage ? t.serverImage : 'profile_icon.png';
+
+          card.innerHTML = `
+            <img src="/images/staff/${img}" class="table-img" />
+            <div class="timer" id="timer-${t._id}">--:--</div>
+            <p><strong>Table:</strong> ${t.tableNo}</p>
+            <p><strong>Server:</strong> ${t.serverName || 'Not Assigned'}</p>
+            <p><strong>Status:</strong> ${t.status}</p>
+          `;
+          activeGrid.appendChild(card);
+
+          if (t.orderStartTime) {
+            startTimer(`timer-${t._id}`, t.orderStartTime,card, t.status);
+          }
+        });
+
+        emptyTables.forEach(t => {
+          const card = document.createElement("div");
+          card.className = `table-card empty`;
+          card.innerHTML = `
+            <img src="/images/staff/profile_icon.png" class="table-img" />
+            <div class="timer">--:--</div>
+            <p><strong>Table:</strong> ${t.tableNo}</p>
+            <p><strong>Server:</strong> None</p>
+            <p><strong>Status:</strong> Empty</p>
+          `;
+          emptyGrid.appendChild(card);
+        });
+      } catch (err) {
+        console.error("Error loading tables:", err);
+      }
+    }
+
+    const activeTimers = {};
+
+    function startTimer(id, startTime, cardElement, status) {
+  const timerElem = document.getElementById(id);
+  if (!timerElem || !cardElement) return;
+
+  if (activeTimers[id]) clearInterval(activeTimers[id]);
+
+  function update() {
+    const diff = Date.now() - new Date(startTime);
+    const minutes = Math.floor(diff / 60000);
+    const seconds = Math.floor((diff % 60000) / 1000);
+    timerElem.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+
+    // ✅ Change border shadow only if status is 'waiting' AND time > 20 min
+    if (status === 'waiting' && minutes >= 20) {
+      cardElement.style.boxShadow = "0 0 15px 4px red";
+    } else {
+      cardElement.style.boxShadow = ""; // reset if condition not met
+    }
+  }
+
+  update();
+  activeTimers[id] = setInterval(update, 1000);
+}
+
+
+    function toggleDropdown() {
+      const d = document.getElementById("dropdownMenu");
+      d.style.display = d.style.display === "flex" ? "none" : "flex";
+    }
+
+    window.addEventListener('click', function (e) {
+      const dropdown = document.getElementById('dropdownMenu');
+      const icon = document.querySelector('.menu-icon-block');
+      if (!dropdown.contains(e.target) && !icon.contains(e.target)) {
+        dropdown.style.display = 'none';
+      }
+    });
+
+    
+    setInterval(fetchTableData, 1000); // update every 2s
+
+   function showOrderPopup(tableId) {
+  fetch(`/api/table-food/${tableId}`)
+    .then(res => res.json())
+    .then(data => {
+      const container = document.getElementById("orderContent");
+      const billBtn = document.getElementById("billButton");
+      container.innerHTML = '';
+      billBtn.style.display = "none";
+
+      if (!data || data.length === 0) {
+        container.innerHTML = "<p style='text-align:center;'>No food ordered for this table.</p>";
+        return;
+      }
+
+      let total = 0;
+
+      data.forEach(d => {
+        total += d.price * d.quantity;
+
+        const item = document.createElement("div");
+        item.className = "selected-dish-item";
+        item.innerHTML = `
+          <img src="/images/dishes/${d.image}" />
+          <div class="dish-info">
+            <div class="dish-header">
+              <strong class="dish-name">${d.name}</strong>
+              <span class="dish-price">₹${d.price}</span>
+            </div>
+            <div class="dish-actions">
+              <span style="font-size: 1rem; color: #444;">Qty: ${d.quantity}</span>
+            </div>
+          </div>
+        `;
+        container.appendChild(item);
+      });
+
+      // Show bill button with stored total
+      billBtn.style.display = "inline-block";
+      billBtn.dataset.total = total; // Store for later use
+      billBtn.dataset.table = tableId;
+
+      document.getElementById("orderPopup").style.display = "flex";
+    })
+    .catch(err => {
+      console.error("❌ Failed to fetch table food:", err);
+    });
+}
+
+
+function closeOrderPopup() {
+  document.getElementById("orderPopup").style.display = "none";
+}
+
+  </script>
+ 
+ 
+
+
+
+</body>
+</html>
