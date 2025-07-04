@@ -241,7 +241,7 @@
             <h4><%= group.category %></h4>
             <% group.dishes.forEach(d => { %>
               <div class="dish-card" onclick="selectDish('<%= d._id %>')">
-                <img src="/images/dishes/<%= d.image %>" alt="Dish" />
+                <img src="<%= d.image %>" alt="Dish" />
                 <p><%= d.name %> - ₹<%= d.price %></p>
               </div>
             <% }) %>
@@ -291,7 +291,7 @@
     const item = document.createElement('div');
     item.className = 'selected-dish-item';
     item.innerHTML = `
-      <img src="/images/dishes/${dish.image}" />
+      <img src="${dish.image}" />
       <div class="dish-info">
         <div class="dish-header">
           <strong class="dish-name">${dish.name}</strong>
