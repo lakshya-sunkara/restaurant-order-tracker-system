@@ -130,6 +130,11 @@ form button:hover {
       <p class="success-message"><%= success %></p>
     <% } %>
 
+    <% if (req.query.success) { %>
+  <p class="success-message"><%= req.query.success %></p>
+<% } %>
+
+
     <!-- ✅ Server Form -->
     <form id="serverForm" action="/add-staff" method="POST" enctype="multipart/form-data">
       <h3>Server Details</h3>
