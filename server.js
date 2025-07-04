@@ -20,7 +20,8 @@ const multer = require('multer');
 const bcrypt = require('bcrypt');
 const fs = require('fs');
 const path = require('path');
-
+const cloudinary = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const Table = require('./models/Table');
 app.set('view engine', 'ejs');
 app.use(express.static('public'));
@@ -38,17 +39,23 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-const dishStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'public/images/dishes');
-  },
-  filename: (req, file, cb) => {
-    const uniqueName = Date.now() + '-' + file.originalname;
-    cb(null, uniqueName);
+
+cloudinary.config({
+  cloud_name: 'de98eawax',
+  api_key: '465751656626493',
+  api_secret: 'W_oPiG4g7E10IkNWFmuhSWkPWyo'
+});
+const dishStorage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: 'dishes', // Cloudinary folder
+    allowed_formats: ['jpg', 'png', 'webp'],
+    transformation: [{ width: 500, height: 500, crop: 'limit' }]
   }
 });
 
 const dishUpload = multer({ storage: dishStorage });
+
 app.use(session({
   secret: 'This is a secret key',
   resave: false,
@@ -443,26 +450,25 @@ app.get('/owner/add-dish', async (req, res) => {
 
 app.post('/owner/add-dish', dishUpload.single('image'), async (req, res) => {
   const { category, name, price } = req.body;
-  const image = req.file?.filename;
+  const file = req.file;
 
   try {
     const lastDish = await Dish.findOne().sort({ dishNo: -1 });
-    const newId = lastDish
-      ? 'D' + String(parseInt(lastDish.dishNo.slice(1)) + 1).padStart(3, '0')
-      : 'D001';
+    const newId = lastDish ? 'D' + String(parseInt(lastDish.dishNo.slice(1)) + 1).padStart(3, '0') : 'D001';
 
     const newDish = new Dish({
       dishNo: newId,
       category,
       name,
       price,
-      image 
+      image: file.path // ✅ cloudinary image url
     });
 
     await newDish.save();
 
     const dishes = await Dish.find().sort({ dishNo: 1 });
     res.render('owner/add-dish', { success: "Dish added successfully", error: null, dishes });
+
   } catch (err) {
     const dishes = await Dish.find().sort({ dishNo: 1 });
     res.render('owner/add-dish', {
