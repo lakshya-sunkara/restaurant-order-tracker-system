@@ -33,49 +33,82 @@
       <a href="/owner/logout">Logout</a>
     </nav>
   </header>
-  <h2 style="text-align:center; margin-top: 30px;">Staff Members</h2>
-  <div style="text-align:center; margin: 20px;">
-  <input type="text" id="staffSearch" placeholder="Search by name, ID, phone, email..." style="padding: 10px; width: 60%; border-radius: 8px; border: 1px solid #ccc;" />
+
+
+  <h2 style="text-align:center; margin-top: 30px;">Manage Employees</h2>
+
+<div class="tab-buttons" style="text-align:center; margin-top: 10px;">
+  <button onclick="switchTab('server')" id="tab-server" class="active">Servers</button>
+  <button onclick="switchTab('chef')" id="tab-chef">Chefs</button>
 </div>
+
+<div id="server-section" class="tab-section" style="display:block;">
+  <div style="text-align:center; margin: 20px;">
+    <input type="text" id="staffSearch" placeholder="Search by name, ID, phone, email..." style="padding: 10px; width: 60%; border-radius: 8px; border: 1px solid #ccc;" />
+  </div>
 
   <div class="staff-container">
-  <% staffList.forEach(staff => { %>
-    <div class="staff-card"
-     data-name="<%= staff.name.toLowerCase() %>"
-     data-id="<%= staff.staffId.toLowerCase() %>"
-     data-phone="<%= staff.phone.toLowerCase() %>"
-     data-email="<%= staff.email.toLowerCase() %>">
+    <% staffList.forEach(staff => { %>
+      <div class="staff-card"
+        data-name="<%= staff.name.toLowerCase() %>"
+        data-id="<%= staff.staffId?.toLowerCase() || '' %>"
+        data-phone="<%= staff.phone.toLowerCase() %>"
+        data-email="<%= staff.email.toLowerCase() %>">
 
-      <img class="staff-image" src="/images/staff/<%= staff.image %>" alt="Staff Image" />
+        <img class="staff-image" src="/images/staff/<%= staff.image %>" alt="Staff Image" />
 
-      <div class="staff-details">
-        <h3><%= staff.name %></h3>
-        <p><strong>Email:</strong> <%= staff.email %></p>
-        <p><strong>Phone:</strong> <%= staff.phone %></p>
-        <p><strong>Gender:</strong> <%= staff.gender %></p>
-        <p><strong>Address:</strong> <%= staff.address %></p>
-        <p><strong>Staff ID:</strong> <%= staff.staffId %></p>
-        <p><strong>Date of Birth:</strong> <%= staff.dateOfBirth ? staff.dateOfBirth.toDateString() : 'N/A' %></p>
-        <p><strong>Date of Joining:</strong> <%= staff.dateOfJoining ? staff.dateOfJoining.toDateString() : 'N/A' %></p>
-
-        <% if (staff.accountDetails) { %>
-          <p><strong>Account Holder:</strong> <%= staff.accountDetails.accountHolderName %></p>
-          <p><strong>Account No.:</strong> <%= staff.accountDetails.accountNumber %></p>
-          <p><strong>IFSC Code:</strong> <%= staff.accountDetails.ifscCode %></p>
-        <% } %>
-
-        <div class="staff-actions">
-          <form action="/delete-staff/<%= staff._id %>" method="POST" style="display:inline;">
-            <button type="submit" class="delete-btn">Delete</button>
-          </form>
-          <a href="/owner/update-staff/<%= staff._id %>">
-            <button class="edit-btn">Update</button>
-          </a>
+        <div class="staff-details">
+          <h3><%= staff.name %></h3>
+          <p><strong>Email:</strong> <%= staff.email %></p>
+          <p><strong>Phone:</strong> <%= staff.phone %></p>
+          <p><strong>Gender:</strong> <%= staff.gender %></p>
+          <p><strong>Address:</strong> <%= staff.address %></p>
+          <p><strong>Staff ID:</strong> <%= staff.staffId %></p>
+          <p><strong>Date of Birth:</strong> <%= staff.dateOfBirth ? staff.dateOfBirth.toDateString() : 'N/A' %></p>
+          <p><strong>Date of Joining:</strong> <%= staff.dateOfJoining ? staff.dateOfJoining.toDateString() : 'N/A' %></p>
+          <% if (staff.accountDetails) { %>
+            <p><strong>Account Holder:</strong> <%= staff.accountDetails.accountHolderName %></p>
+            <p><strong>Account No.:</strong> <%= staff.accountDetails.accountNumber %></p>
+            <p><strong>IFSC Code:</strong> <%= staff.accountDetails.ifscCode %></p>
+          <% } %>
+          <div class="staff-actions">
+            <form action="/delete-staff/<%= staff._id %>" method="POST" style="display:inline;">
+              <button type="submit" class="delete-btn">Delete</button>
+            </form>
+            <a href="/owner/update-staff/<%= staff._id %>"><button class="edit-btn">Update</button></a>
+          </div>
         </div>
       </div>
-    </div>
-  <% }) %>
+    <% }) %>
+  </div>
 </div>
+
+<div id="chef-section" class="tab-section" style="display:none;">
+  <div class="staff-container">
+    <% chefList.forEach(chef => { %>
+      <div class="staff-card">
+        <img class="staff-image" src="<%= chef.image.startsWith('http') ? chef.image : '/images/staff/' + chef.image %>" alt="Chef Image" />
+        <div class="staff-details">
+          <h3><%= chef.name %></h3>
+          <p><strong>Email:</strong> <%= chef.email %></p>
+          <p><strong>Phone:</strong> <%= chef.phone %></p>
+          <p><strong>Specialty:</strong> <%= chef.specialty %></p>
+          <p><strong>Gender:</strong> <%= chef.gender %></p>
+          <p><strong>Date of Birth:</strong> <%= chef.dateOfBirth ? chef.dateOfBirth.toDateString() : 'N/A' %></p>
+          <p><strong>Date of Joining:</strong> <%= chef.joinDate ? chef.joinDate.toDateString() : 'N/A' %></p>
+        </div>
+      </div>
+    <% }) %>
+    <div class="cheff-actions">
+            <form action="/delete-chef/<%= chef._id %>" method="POST" style="display:inline;">
+              <button type="submit" class="delete-btn">Delete</button>
+            </form>
+            <a href="/owner/update-chef/<%= staff._id %>"><button class="edit-btn">Update</button></a>
+          </div>
+  </div>
+</div>
+
+  
 
 
 
@@ -105,6 +138,21 @@
   dropdown.style.display = dropdown.style.display === 'flex' ? 'none' : 'flex';
 }
 
+
+ function switchTab(tab) {
+    document.getElementById("tab-server").classList.remove("active");
+    document.getElementById("tab-chef").classList.remove("active");
+    document.getElementById("server-section").style.display = "none";
+    document.getElementById("chef-section").style.display = "none";
+
+    if (tab === 'server') {
+      document.getElementById("tab-server").classList.add("active");
+      document.getElementById("server-section").style.display = "block";
+    } else {
+      document.getElementById("tab-chef").classList.add("active");
+      document.getElementById("chef-section").style.display = "block";
+    }
+  }
  </script>
 </body>
 </html>

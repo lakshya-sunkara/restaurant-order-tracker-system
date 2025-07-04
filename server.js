@@ -320,12 +320,12 @@ app.post('/owner/add-chef', chefUpload.single('image'), async (req, res) => {
 app.get('/owner/manage-staff', async (req, res) => {
   try {
     const staffList = await Staff.find({});
-    res.render('owner/manage-staff', { staffList });
+    const chefList = await Chef.find({});
+    res.render('owner/manage-staff', { staffList, chefList });
   } catch (err) {
     res.status(500).send('Error fetching staff details.');
   }
 });
-
 
 app.post('/delete-staff/:id', async (req, res) => {
   try {
