@@ -307,7 +307,7 @@ app.post('/owner/add-chef', chefUpload.single('image'), async (req, res) => {
     });
 
     await chef.save();
-    res.render('/owner/add-staff', { success: "chef added successfully!", error: null });
+    res.redirect('/owner/add-staff', { success: "chef added successfully!", error: null });
   } catch (err) {
     res.status(500).render('owner/add-staff', {
       success: null,
