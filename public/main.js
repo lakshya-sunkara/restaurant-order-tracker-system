@@ -106,3 +106,20 @@ function openUpdatePopup(dishId) {
   }
 
 
+function switchTab(tab) {
+    // Buttons
+    document.getElementById("tab-server").classList.remove("active");
+    document.getElementById("tab-chef").classList.remove("active");
+
+    // Forms
+    document.getElementById("serverForm").style.display = "none";
+    document.getElementById("chefForm").style.display = "none";
+
+    if (tab === "server") {
+      document.getElementById("tab-server").classList.add("active");
+      document.getElementById("serverForm").style.display = "block";
+    } else {
+      document.getElementById("tab-chef").classList.add("active");
+      document.getElementById("chefForm").style.display = "block";
+    }
+  }

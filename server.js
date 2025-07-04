@@ -16,6 +16,7 @@ const crypto = require('crypto');
 const Staff = require('./models/Staff');
 const StaffAuth = require('./models/StaffAuth');
 const Dish = require('./models/Dish');
+const Chef=require('./models/Chef');
 const multer = require('multer');
 const bcrypt = require('bcrypt');
 const fs = require('fs');
@@ -55,6 +56,16 @@ const dishStorage = new CloudinaryStorage({
 });
 
 const dishUpload = multer({ storage: dishStorage });
+
+const chefStorage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: 'chefs', 
+    allowed_formats: ['jpg', 'png', 'webp'],
+    transformation: [{ width: 500, height: 500, crop: 'limit' }]
+  }
+});
+const chefUpload = multer({ storage: chefStorage });
 
 app.use(session({
   secret: 'This is a secret key',
@@ -282,6 +293,26 @@ app.post('/add-staff', upload.single('image'), async (req, res) => {
   }
 });
 
+app.post('/owner/add-chef', chefUpload.single('image'), async (req, res) => {
+  try {
+    const chef = new Chef({
+      name: req.body.name,
+      email: req.body.email,
+      specialty: req.body.specialty,
+      phone: req.body.phone,
+      gender: req.body.gender,
+      dateOfBirth: req.body.dateOfBirth,
+      image: req.file.path, // Cloudinary URL
+      joinDate: new Date() // Automatically set to current date
+    });
+
+    await chef.save();
+    res.redirect('/owner/add-staff');
+  } catch (err) {
+    console.error("Failed to add chef:", err);
+    res.status(500).send("Server error");
+  }
+});
 
 
 app.get('/owner/manage-staff', async (req, res) => {

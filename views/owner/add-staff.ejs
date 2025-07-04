@@ -37,7 +37,9 @@
       border: 1px solid #ccc;
       font-size: 1rem;
     }
-
+form button:hover {
+  background: #e88b00;
+}
     .gender-options label {
   margin-right: 20px;
   display: inline-flex;
@@ -57,14 +59,36 @@
 
     
     .login-box {
-  margin-top: 35%;
+  margin-top: 43%;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
   
 }
     .login-section {
-        margin-bottom: 35%;
+        margin-bottom: 43%;
     }
 
-    
+    .tab-buttons {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+  gap: 20px;
+}
+
+.tab-buttons button {
+  padding: 10px 20px;
+  border: none;
+  background: #eaeaea;
+  font-size: 1.1rem;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: 0.3s ease;
+}
+
+.tab-buttons button.active {
+  background: #ff9900;
+  color: white;
+  font-weight: bold;
+}
 
    
   </style>
@@ -89,9 +113,15 @@
     </nav>
   </header>
 
- <section class="login-section">
+  <section class="login-section">
   <div class="login-box">
-    <h2>Add Staff</h2>
+    <h2>Add Employee</h2>
+
+    <!-- Switch Buttons -->
+    <div class="tab-buttons" style="display: flex; gap: 10px; margin-bottom: 20px;">
+      <button onclick="switchTab('server')" id="tab-server" class="active">Add Server</button>
+      <button onclick="switchTab('chef')" id="tab-chef">Add Chef</button>
+    </div>
 
     <% if (error) { %>
       <p class="error-message"><%= error %></p>
@@ -100,7 +130,9 @@
       <p class="success-message"><%= success %></p>
     <% } %>
 
-    <form action="/add-staff" method="POST" enctype="multipart/form-data">
+    <!-- ✅ Server Form -->
+    <form id="serverForm" action="/add-staff" method="POST" enctype="multipart/form-data">
+      <h3>Server Details</h3>
       <div class="form-group">
         <label for="name">Full Name:</label>
         <input type="text" name="name" id="name" required />
@@ -157,8 +189,27 @@
 
       <button type="submit" class="login-submit">Add Staff</button>
     </form>
+
+    <!-- ✅ Chef Form -->
+    <form id="chefForm" action="/owner/add-chef" method="POST" enctype="multipart/form-data" style="display: none;">
+      <h3>Chef Details</h3>
+      <div class="form-group"><label>Full Name:</label><input type="text" name="name" required /></div>
+      <div class="form-group"><label>Email:</label><input type="email" name="email" required /></div>
+      <div class="form-group"><label>Specialty:</label><input type="text" name="specialty" required /></div>
+      <div class="form-group"><label>Phone:</label><input type="tel" name="phone" required pattern="[0-9]{10}" /></div>
+      <div class="form-group"><label>Gender:</label>
+        <label><input type="radio" name="gender" value="Male" required /> Male</label>
+        <label><input type="radio" name="gender" value="Female" /> Female</label>
+      </div>
+      <div class="form-group"><label>Date of Birth:</label><input type="date" name="dateOfBirth" required /></div>
+      <div class="form-group"><label>Chef Image:</label><input type="file" name="image" accept="image/*" required /></div>
+      <button type="submit" class="login-submit">Add Chef</button>
+    </form>
   </div>
 </section>
+
+
+
 
 
 
