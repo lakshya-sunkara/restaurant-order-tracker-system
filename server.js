@@ -48,7 +48,7 @@ cloudinary.config({
 const dishStorage = new CloudinaryStorage({
   cloudinary,
   params: {
-    folder: 'dishes', // Cloudinary folder
+    folder: 'dishes', 
     allowed_formats: ['jpg', 'png', 'webp'],
     transformation: [{ width: 500, height: 500, crop: 'limit' }]
   }
