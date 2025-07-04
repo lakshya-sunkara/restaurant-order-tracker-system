@@ -20,6 +20,7 @@ const multer = require('multer');
 const bcrypt = require('bcrypt');
 const fs = require('fs');
 const path = require('path');
+
 const Table = require('./models/Table');
 app.set('view engine', 'ejs');
 app.use(express.static('public'));
