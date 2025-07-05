@@ -335,7 +335,22 @@ app.post('/delete-staff/:id', async (req, res) => {
     res.status(500).send('Error deleting staff');
   }
 });
+app.post('/delete-chef/:id', async (req, res) => {
+  try {
+    const chef = await Chef.findById(req.params.id);
+    if (!chef) return res.status(404).send('Chef not found');
 
+    
+
+      await Chef.findByIdAndDelete(req.params.id);
+      res.redirect('/owner/manage-staff');
+    
+
+  } catch (err) {
+    console.error("Error deleting chef:", err);
+    res.status(500).send("Server error while deleting chef.");
+  }
+});
 
 app.get('/owner/update-staff/:id', async (req, res) => {
   const staff = await Staff.findById(req.params.id);

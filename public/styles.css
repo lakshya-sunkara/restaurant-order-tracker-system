@@ -539,7 +539,13 @@ body {
       box-shadow: 0 4px 10px rgba(0,0,0,0.1);
       overflow: hidden;
     }
-
+.chef-card {
+      display: flex;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
     .staff-image {
       width: 35%;
       object-fit: cover;
