@@ -6,8 +6,12 @@ const chefSchema = new mongoose.Schema({
   specialty: String,
   phone: String,
   gender: String,
-  dateOfBirth: Date,
+  
   image: String,
+  chefId: {
+    type: String,
+    default: () => new mongoose.Types.ObjectId().toString()
+  },
   joinDate: {
     type: Date,
     default: Date.now // 👈 Automatically records the time of creation
