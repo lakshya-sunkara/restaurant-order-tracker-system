@@ -1,35 +1,28 @@
+<!-- views/staff/chef-login.ejs -->
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
+    <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Staff Login - LakshyaFiesta</title>
-  <link rel="stylesheet" href="/styles.css">
+  <title>Chef Login</title>
+  <link rel="stylesheet" href="/styles.css" />
   <link rel="icon" type="image/x-icon" href="/images/favicon.ico" />
 </head>
 <body>
 
-     <header class="restaurant-header">
+    <header class="restaurant-header">
   <div class="logo-container">
     <img src="/images/Lakshya_logo.jpg" alt="LakshyaFiesta Logo" class="logo" />
     <h1 class="restaurant-name">LakshyaFiesta</h1>
   </div>
 </header>
 
-
-  <div class="login-options">
-  <a href="/chef-login" class="chef-login-btn">👨‍🍳 Chef Login</a>
-</div>
-
   <section class="login-section">
-    
     <div class="login-box">
-      <h2>Staff Login</h2>
-      <% if (error) { %>
-        <p class="error-message"><%= error %></p>
-      <% } %>
-      <form action="/staff-login" method="POST">
-        <div class="form-group">
+      <h2>Chef Login</h2>
+      <% if (error) { %><p class="error-message"><%= error %></p><% } %>
+      <form method="POST" action="/chef-login">
+         <div class="form-group">
           <label for="email">Email:</label>
           <input type="email" name="email" id="email" required />
         </div>
@@ -39,13 +32,15 @@
         </div>
         <button type="submit" class="login-submit">Login</button>
       </form>
-      <p style="margin-top: 1rem;">Don't have a password? <a href="/staff/create-password-step1"
+      <p style="margin-top: 1rem;">Don't have a password? <a href="/chef/create-password-step1""
    style="text-decoration: none; color: inherit;"
    onmouseover="this.style.textDecoration='underline'"
    onmouseout="this.style.textDecoration='none'">
    Create Password
 </a>
 </p>
+      
+
     </div>
   </section>
 </body>

@@ -14,6 +14,7 @@ const nodemailer = require('nodemailer');
 const MongoDBStore = require('connect-mongodb-session')(session);
 const crypto = require('crypto');
 const Staff = require('./models/Staff');
+const ChefAuth = require('./models/ChefAuth');
 const StaffAuth = require('./models/StaffAuth');
 const Dish = require('./models/Dish');
 const Chef=require('./models/Chef');
@@ -808,6 +809,84 @@ app.post('/owner/update-chef/:id', chefUpload.single('image'), async (req, res) 
     console.error("❌ Error updating chef:", err);
     res.status(500).send("Server error while updating chef.");
   }
+});
+app.get('/chef/create-password-step1', (req, res) => {
+  res.render('chef/create-password-step1', { error: null });
+});
+
+// POST: Check if chef exists and redirect to create password page
+app.post('/chef/create-password-step1', async (req, res) => {
+  const { email } = req.body;
+  const chef = await Chef.findOne({ email });
+  if (!chef) {
+    return res.render('chef/create-password-step1', { error: "Chef not found with this email." });
+  }
+
+  res.render('chef/create-password', { email }); // Send email to next step
+});
+
+
+app.post('/chef/create-password', async (req, res) => {
+  const { email, password, confirmPassword } = req.body;
+
+  if (password !== confirmPassword) {
+    return res.status(400).send("Passwords do not match");
+  }
+
+  const chef = await Chef.findOne({ email });
+  if (!chef) return res.status(404).send("Chef not found.");
+
+  const existing = await ChefAuth.findOne({ email });
+  if (existing) return res.status(400).send("Password already created. Please login.");
+
+  const hashed = await bcrypt.hash(password, 10);
+  const newChefAuth = new ChefAuth({ email, password: hashed });
+
+  await newChefAuth.save();
+  res.redirect('/chef-login'); // Redirect after successful creation
+});
+
+
+app.get('/chef-login', (req, res) => {
+  res.render('chef/chef-login', { error: null });
+});
+
+app.post('/chef-login', async (req, res) => {
+  const { email, password } = req.body;
+   const chef = await Chef.findOne({ email });
+  if (!chef) return res.render('chef/chef-login', { error: 'chef email not registered.' });
+
+  const chefAuth = await ChefAuth.findOne({ email });
+  if (!chefAuth) {
+    return res.render('chef/chef-login', { error: 'Invalid credentials' });
+  }
+
+  const valid = await bcrypt.compare(password, chefAuth.password);
+  if (!valid) {
+    return res.render('chef/chef-login', { error: 'Invalid credentials' });
+  }
+
+  req.session.isChefLoggedIn = true;
+  req.session.chefEmail = email;
+   await notifyOwner(
+    'chef Login Notification',
+    `chef "${chef.name}" has logged in on ${new Date().toLocaleString()}.`
+  );
+
+
+  res.redirect('/chef-dashboard'); // redirect to chef's dashboard
+});
+app.get('/chef-dashboard', async (req, res) => {
+  if (!req.session.isChefLoggedIn) {
+    return res.redirect('/chef-login');
+  }
+
+  res.render('chef/chef-dashboard', { email: req.session.chefEmail });
+});
+app.get('/chef/logout', (req, res) => {
+  req.session.chefLoggedIn = false;
+  req.session.chefEmail = null;
+  res.render('chef/logout-success', { userType: 'Chef' });
 });
 
 app.get('/staff/logout', (req, res) => {

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>chef-login-success</title>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
+</head>
+<body>
+    <section>
+        <!-- Replace these lines -->
+<a href="/" class="button-link">Go to Home Page</a>
+<a href="/owner/owner-login" class="button-link">Login Again</a>
+
+<!-- With this conditional -->
+
+
+<% if (userType === 'Chef') { %>
+  <a href="/chef/login" class="button-link">Chef Login Again</a>
+<% } else if (userType === 'Staff') { %>
+  <a href="/staff/staff-login" class="button-link">Staff Login Again</a>
+<% } else { %>
+  <a href="/owner/owner-login" class="button-link">Owner Login Again</a>
+<% } %>
+
+    </section>
+</body>
+</html>
