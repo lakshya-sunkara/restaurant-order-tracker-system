@@ -155,7 +155,7 @@
           <p><strong>Phone:</strong> <%= chef.phone %></p>
           <p><strong>Specialty:</strong> <%= chef.specialty %></p>
           <p><strong>Gender:</strong> <%= chef.gender %></p>
-          <p><strong>Date of Birth:</strong> <%= chef.dateOfBirth ? chef.dateOfBirth.toDateString() : 'N/A' %></p>
+          
           <p><strong>Date of Joining:</strong> <%= chef.joinDate ? chef.joinDate.toDateString() : 'N/A' %></p>
           <div class="staff-actions">
             <form action="/delete-chef/<%= chef._id %>" method="POST" style="display:inline;">

@@ -776,6 +776,39 @@ app.get('/owner/get-chef/:id', async (req, res) => {
   }
 });
 
+app.post('/owner/update-chef/:id', chefUpload.single('image'), async (req, res) => {
+  try {
+    const chefId = req.params.id;
+    const {
+      name,
+      email,
+      specialty,
+      phone,
+      gender,
+      dateOfBirth
+    } = req.body;
+
+    const updateData = {
+      name,
+      email,
+      specialty,
+      phone,
+      gender,
+      dateOfBirth
+    };
+
+    // If a new image is uploaded, update it
+    if (req.file && req.file.path) {
+      updateData.image = req.file.path;
+    }
+
+    await Chef.findByIdAndUpdate(chefId, updateData);
+    res.redirect('/owner/manage-staff');
+  } catch (err) {
+    console.error("❌ Error updating chef:", err);
+    res.status(500).send("Server error while updating chef.");
+  }
+});
 
 app.get('/staff/logout', (req, res) => {
   req.session.destroy(err => {
