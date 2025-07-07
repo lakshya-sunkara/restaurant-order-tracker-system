@@ -766,6 +766,15 @@ app.post('/staff/place-order/:tableId', async (req, res) => {
   }
 });
 
+app.get('/owner/get-chef/:id', async (req, res) => {
+  try {
+    const chef = await Chef.findById(req.params.id).lean();
+    res.json(chef);
+  } catch (err) {
+    console.error("Error fetching chef details:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
 
 
 app.get('/staff/logout', (req, res) => {
