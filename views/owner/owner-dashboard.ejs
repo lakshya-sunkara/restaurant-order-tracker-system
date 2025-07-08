@@ -174,7 +174,7 @@
     timerElem.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 
     // ✅ Change border shadow only if status is 'waiting' AND time > 20 min
-    if (status === 'waiting' && minutes >= 20) {
+    if ((status === 'waiting' || status === "preparing") && minutes >= 20) {
       cardElement.style.boxShadow = "0 0 15px 4px red";
     } else {
       cardElement.style.boxShadow = ""; // reset if condition not met
@@ -224,7 +224,7 @@
         const item = document.createElement("div");
         item.className = "selected-dish-item";
         item.innerHTML = `
-          <img src="/images/dishes/${d.image}" />
+          <img src="${d.image}" />
           <div class="dish-info">
             <div class="dish-header">
               <strong class="dish-name">${d.name}</strong>

@@ -928,7 +928,10 @@ body {
   box-shadow: 0 0 25px 6px orange;
 }
 
-
+.table-card.preparing {
+  border-color: orange;
+  box-shadow: 0 0 25px 6px orange;
+}
 
 .table-card.delivered {
   border-color: green;

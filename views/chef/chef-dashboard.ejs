@@ -6,6 +6,7 @@
     <title>chef-dashboard</title>
     <link rel="stylesheet" href="/styles.css">
     <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
+   
 </head>
 <body>
     <header class="restaurant-header">
@@ -13,9 +14,141 @@
             <img src="/images/Lakshya_logo.jpg" alt="LakshyaFiesta Logo" class="logo">
             <h1 class="restaurant-name">LakshyaFiesta</h1>
         </div>
+        <a href="/chef/logout" class="logout-button">Logout</a>
     </header>
-    <p>Welcome to the Chef Dashboard!</p>
-    <a href="/chef/logout" class="logout-button">Logout</a>
+   
+    
+
+
+   <div class="table-section"></div>
+
+   <div class="popup-overlay" id="orderPopup">
+    <div class="popup-box">
+      <span class="close-btn" onclick="closePopup()">✖</span>
+      <h3>Ordered Dishes</h3>
+      <div id="dishList"></div>
+      <button id="statusBtn" onclick="updateStatus()">...</button>
+    </div>
+  </div> 
+  
+
+  
+    <script>
+
+        let currentTableId = '';
+    let currentStatus = '';
+        document.getElementById("orderPopup").style.display = "none";
+    function openPopup(tableId, status) {
+      currentTableId = tableId;
+      currentStatus = status;
+      document.getElementById("orderPopup").style.display = "flex";
+
+      fetch(`/api/chef/table-dishes/${tableId}`)
+        .then(res => res.json())
+        .then(data => {
+          const list = document.getElementById('dishList');
+          list.innerHTML = '';
+          data.forEach(d => {
+            const item = document.createElement('div');
+            item.innerHTML = `
+              <p><img src="${d.image}" width="50" /> <strong>${d.name}</strong> × ${d.quantity}</p>
+            `;
+            list.appendChild(item);
+          });
+
+          const btn = document.getElementById('statusBtn');
+          btn.textContent = status === 'waiting' ? 'Mark Preparing' : 'Mark Prepared';
+        });
+    }
+
+    function closePopup() {
+      document.getElementById("orderPopup").style.display = "none";
+    }
+
+     function updateStatus() {
+      fetch(`/chef/update-status/${currentTableId}`, {
+        method: 'POST'
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          alert(`Status updated to ${data.newStatus}`);
+          window.location.reload();
+        }
+      });
+    }
+
+  let tableContainer = document.querySelector(".table-section");
+
+  function startTimer(elem, startTime, card, status) {
+    function update() {
+      const diff = Date.now() - new Date(startTime);
+      const min = Math.floor(diff / 60000);
+      const sec = Math.floor((diff % 60000) / 1000);
+      elem.textContent = `${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+
+      if ((status === 'waiting' || status === "preparing") && min >= 20) {
+        card.style.boxShadow = '0 0 12px 3px red';
+      } else {
+        card.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.15)';
+      }
+    }
+
+    update();
+    return setInterval(update, 1000);
+  }
+
+  let activeTimers = {}; // Store intervals for cleanup
+
+  async function fetchTables() {
+    try {
+      const res = await fetch('/api/tables');
+      const tables = await res.json();
+      tableContainer.innerHTML = '';
+
+      tables
+        .filter(t => t.status === 'waiting' || t.status === 'preparing')
+        .forEach(t => {
+          const card = document.createElement("div");
+          card.className = `table-card ${t.status}`;
+          card.onclick = () => openPopup(t._id, t.status);
+           
+          const serverImage = t.serverImage || 'profile_icon.png';
+
+          card.innerHTML = `
+            <img src="/images/staff/${serverImage}" style="width: 100px; height: 100px; border-radius: 50%;" />
+            <div class="timer" id="timer-${t._id}">--:--</div>
+            <p><strong>Table:</strong> ${t.tableNo}</p>
+            <p><strong>Server:</strong> ${t.serverName || 'N/A'}</p>
+            <p><strong>Status:</strong> ${t.status}</p>
+          `;
+           if(t.status === 'waiting') {
+              card.style.borderColor = 'orange';
+              card.style.boxShadow = '0 0 25px 6px orange';
+            } else if (t.status === 'preparing') {
+              card.style.borderColor = 'orange';
+              card.style.boxShadow = '0 0 25px 6px orange';
+            } 
+
+          tableContainer.appendChild(card);
+
+          const timerElem = card.querySelector(`#timer-${t._id}`);
+          if (t.orderStartTime) {
+            if (activeTimers[t._id]) clearInterval(activeTimers[t._id]); // Clean old timer
+            activeTimers[t._id] = startTimer(timerElem, t.orderStartTime, card, t.status);
+          }
+        });
+    } catch (err) {
+      console.error("Error fetching tables:", err);
+    }
+  }
+
+  // Fetch initially and every 5 seconds
+  document.addEventListener("DOMContentLoaded", () => {
+    fetchTables();
+    setInterval(fetchTables, 5000); // Refresh every 5 sec
+  });
+</script>
 
     
 </body>

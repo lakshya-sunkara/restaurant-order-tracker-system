@@ -756,7 +756,8 @@ app.post('/staff/place-order/:tableId', async (req, res) => {
     });
 
     table.food = existingFood;
-    table.status = 'waiting'; // Update status if required
+    table.status = 'waiting'; 
+    table.orderStartTime = new Date();
     await table.save();
 
     return res.json({ success: true, message: 'Order placed successfully' });
@@ -880,9 +881,69 @@ app.get('/chef-dashboard', async (req, res) => {
   if (!req.session.isChefLoggedIn) {
     return res.redirect('/chef-login');
   }
+   
+    res.render('chef/chef-dashboard', { email: req.session.chefEmail  });
+ 
 
-  res.render('chef/chef-dashboard', { email: req.session.chefEmail });
+  
 });
+
+
+// POST update status (from waiting → preparing → delivered)
+app.post('/chef/update-status/:id', async (req, res) => {
+  try {
+    const table = await Table.findById(req.params.id);
+
+    if (!table) return res.status(404).json({ success: false, message: "Table not found" });
+
+    let newStatus = table.status;
+
+    if (table.status === 'waiting') {
+      newStatus = 'preparing';
+    } else if (table.status === 'preparing') {
+      newStatus = 'delivered';
+      table.orderStartTime = null; // ✅ Reset timer
+    } else {
+      return res.status(400).json({ success: false, message: 'Invalid status transition' });
+    }
+
+    table.status = newStatus;
+    await table.save();
+
+    return res.json({ success: true, newStatus });
+  } catch (err) {
+    console.error("Error updating status:", err);
+    res.status(500).json({ success: false });
+  }
+});
+
+
+
+// GET dishes for a table (for chef popup)
+app.get('/api/chef/table-dishes/:id', async (req, res) => {
+  try {
+    const table = await Table.findById(req.params.id).lean();
+    if (!table || !table.food) return res.json([]);
+
+    const dishNos = table.food.map(f => f.dishNo); // get all dishNos from table
+const dishes = await Dish.find({ dishNo: { $in: dishNos } }).lean();
+
+const fullDetails = table.food.map(item => {
+  const dish = dishes.find(d => d.dishNo === item.dishNo); // match using dishNo
+  return {
+    ...dish,
+    quantity: item.quantity
+  };
+});
+
+
+    res.json(fullDetails);
+  } catch (err) {
+    console.error("Error loading table food:", err);
+    res.status(500).json([]);
+  }
+});
+
 app.get('/chef/logout', (req, res) => {
   req.session.chefLoggedIn = false;
   req.session.chefEmail = null;

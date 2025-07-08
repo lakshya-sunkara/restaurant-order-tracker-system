@@ -181,7 +181,7 @@
     timerElem.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 
     // ✅ Change border shadow only if status is 'waiting' AND time > 20 min
-    if (status === 'waiting' && minutes >= 20) {
+    if ((status === 'waiting' || status === "preparing") && minutes >= 20) {
       cardElement.style.boxShadow = "0 0 15px 4px red";
     } else {
       cardElement.style.boxShadow = ""; // reset if condition not met
