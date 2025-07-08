@@ -86,8 +86,16 @@
       const min = Math.floor(diff / 60000);
       const sec = Math.floor((diff % 60000) / 1000);
       elem.textContent = `${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+      if(status === 'waiting' && min < 20) {
+        card.style.borderColor = 'orange';
+        card.style.boxShadow = '0 0 25px 6px orange';
+      } else if (status === 'preparing' && min < 20) {
+        card.style.borderColor = 'orange';
+        card.style.boxShadow = '0 0 25px 6px orange';
+        
+      } 
 
-      if ((status === 'waiting' || status === "preparing") && min >= 20) {
+      else if ((status === 'waiting' || status === "preparing") && min >= 20) {
         card.style.boxShadow = '0 0 12px 3px red';
       } else {
         card.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.15)';
@@ -110,7 +118,7 @@
         .filter(t => t.status === 'waiting' || t.status === 'preparing')
         .forEach(t => {
           const card = document.createElement("div");
-          card.className = `table-card ${t.status}`;
+           card.className = `table-card ${t.status}`;
           card.onclick = () => openPopup(t._id, t.status);
            
           const serverImage = t.serverImage || 'profile_icon.png';
@@ -122,21 +130,16 @@
             <p><strong>Server:</strong> ${t.serverName || 'N/A'}</p>
             <p><strong>Status:</strong> ${t.status}</p>
           `;
-           if(t.status === 'waiting') {
-              card.style.borderColor = 'orange';
-              card.style.boxShadow = '0 0 25px 6px orange';
-            } else if (t.status === 'preparing') {
-              card.style.borderColor = 'orange';
-              card.style.boxShadow = '0 0 25px 6px orange';
-            } 
+          
 
           tableContainer.appendChild(card);
-
+            
           const timerElem = card.querySelector(`#timer-${t._id}`);
           if (t.orderStartTime) {
             if (activeTimers[t._id]) clearInterval(activeTimers[t._id]); // Clean old timer
             activeTimers[t._id] = startTimer(timerElem, t.orderStartTime, card, t.status);
           }
+        
         });
     } catch (err) {
       console.error("Error fetching tables:", err);
@@ -146,7 +149,7 @@
   // Fetch initially and every 5 seconds
   document.addEventListener("DOMContentLoaded", () => {
     fetchTables();
-    setInterval(fetchTables, 5000); // Refresh every 5 sec
+    setInterval(fetchTables, 1000); // Refresh every 5 sec
   });
 </script>
 
