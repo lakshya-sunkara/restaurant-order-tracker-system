@@ -20,7 +20,9 @@
     
 
 
-   <div class="table-section"></div>
+   <p id="no-tables-message" style="text-align:center; font-weight:bold; color: gray; margin-top:20% ;"></p>
+<div class="table-section"></div>
+
 
    <div class="popup-overlay" id="orderPopup">
     <div class="popup-box">
@@ -109,42 +111,52 @@
   let activeTimers = {}; // Store intervals for cleanup
 
   async function fetchTables() {
-    try {
-      const res = await fetch('/api/tables');
-      const tables = await res.json();
-      tableContainer.innerHTML = '';
+  try {
+    const res = await fetch('/api/tables');
+    const tables = await res.json();
 
-      tables
-        .filter(t => t.status === 'waiting' || t.status === 'preparing')
-        .forEach(t => {
-          const card = document.createElement("div");
-           card.className = `table-card ${t.status}`;
-          card.onclick = () => openPopup(t._id, t.status);
-           
-          const serverImage = t.serverImage || 'profile_icon.png';
+    const tableContainer = document.querySelector('.table-section');
+    const noTablesMsg = document.getElementById('no-tables-message');
+    tableContainer.innerHTML = '';
+    noTablesMsg.textContent = '';
 
-          card.innerHTML = `
-            <img src="/images/staff/${serverImage}" style="width: 100px; height: 100px; border-radius: 50%;" />
-            <div class="timer" id="timer-${t._id}">--:--</div>
-            <p><strong>Table:</strong> ${t.tableNo}</p>
-            <p><strong>Server:</strong> ${t.serverName || 'N/A'}</p>
-            <p><strong>Status:</strong> ${t.status}</p>
-          `;
-          
+    const filtered = tables.filter(t => t.status === 'waiting' || t.status === 'preparing');
 
-          tableContainer.appendChild(card);
-            
-          const timerElem = card.querySelector(`#timer-${t._id}`);
-          if (t.orderStartTime) {
-            if (activeTimers[t._id]) clearInterval(activeTimers[t._id]); // Clean old timer
-            activeTimers[t._id] = startTimer(timerElem, t.orderStartTime, card, t.status);
-          }
-        
-        });
-    } catch (err) {
-      console.error("Error fetching tables:", err);
+    if (filtered.length === 0) {
+      noTablesMsg.textContent = "✅ No orders are waiting or preparing.";
+      return;
     }
+
+    filtered.forEach(t => {
+      const card = document.createElement("div");
+      card.className = `table-card ${t.status}`;
+      card.onclick = () => openPopup(t._id, t.status);
+
+      const serverImage = t.serverImage || 'profile_icon.png';
+      card.innerHTML = `
+        <img src="/images/staff/${serverImage}" style="width: 100px; height: 100px; border-radius: 50%;" />
+        <div class="timer" id="timer-${t._id}">--:--</div>
+        <p><strong>Table:</strong> ${t.tableNo}</p>
+        <p><strong>Server:</strong> ${t.serverName || 'N/A'}</p>
+        <p><strong>Status:</strong> ${t.status}</p>
+      `;
+
+      tableContainer.appendChild(card);
+
+      if (t.status === "waiting") card.classList.add("waiting");
+      else if (t.status === "preparing") card.classList.add("preparing");
+
+      const timerElem = card.querySelector(`#timer-${t._id}`);
+      if (t.orderStartTime) {
+        if (activeTimers[t._id]) clearInterval(activeTimers[t._id]);
+        activeTimers[t._id] = startTimer(timerElem, t.orderStartTime, card, t.status);
+      }
+    });
+  } catch (err) {
+    console.error("Error fetching tables:", err);
   }
+}
+
 
   // Fetch initially and every 5 seconds
   document.addEventListener("DOMContentLoaded", () => {
