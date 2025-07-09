@@ -883,8 +883,6 @@ app.get('/chef-dashboard', async (req, res) => {
   }
    
     res.render('chef/chef-dashboard', { email: req.session.chefEmail  });
- 
-
   
 });
 

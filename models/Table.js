@@ -17,7 +17,13 @@ const tableSchema = new mongoose.Schema({
       dishNo: { type: String },  // ✅ Changed from dishId (ObjectId) to dishNo (String)
       quantity: Number
     }
-  ]
+  ],
+  orderedFood: [
+    {
+      dishNo: { type: String },  
+      quantity: Number
+    }
+  ],
 });
 
 module.exports = mongoose.model('Table', tableSchema);
