@@ -710,28 +710,44 @@ app.post('/staff/reset-table/:id', async (req, res) => {
 app.get('/api/table-food/:id', async (req, res) => {
   try {
     const table = await Table.findById(req.params.id).lean();
-    if (!table || !table.food) return res.json([]);
+    if (!table) return res.json({ ordered: [], delivered: [] });
 
-    const dishNos = table.food.map(f => f.dishNo); // ✅ Use dishNo here
-    const dishes = await Dish.find({ dishNo: { $in: dishNos } }).lean();
+    const foodArray = Array.isArray(table.food) ? table.food : [];
+    const deliveredArray = Array.isArray(table.orderedFood) ? table.orderedFood : [];
+    
+    
+    const allDishNos = [
+      ...foodArray.map(f => f.dishNo),
+      ...deliveredArray.map(f => f.dishNo)
+    ];
 
-    const fullDetails = table.food.map(item => {
-      const dish = dishes.find(d => d.dishNo === item.dishNo);
-      return dish ? {
-        dishNo: item.dishNo,
-        name: dish.name,
-        price: dish.price,
-        image: dish.image,
-        quantity: item.quantity
-      } : null;
-    }).filter(Boolean); // Remove nulls
+    const dishes = await Dish.find({ dishNo: { $in: allDishNos } }).lean();
 
-    res.json(fullDetails);
+    const mapDishes = (list) =>
+      list.map(item => {
+        const dish = dishes.find(d => d.dishNo === item.dishNo);
+        return dish
+          ? {
+              dishNo: item.dishNo,
+              name: dish.name,
+              price: dish.price,
+              image: dish.image,
+              quantity: item.quantity
+            }
+          : null;
+      }).filter(Boolean);
+      
+    res.json({
+      ordered: mapDishes(foodArray),
+      delivered: mapDishes(deliveredArray)
+    });
   } catch (err) {
     console.error("Error loading table food:", err);
-    res.status(500).json([]);
+    res.status(500).json({ ordered: [], delivered: [] });
   }
 });
+
+
 
 app.post('/staff/place-order/:tableId', async (req, res) => {
   try {
@@ -900,7 +916,15 @@ app.post('/chef/update-status/:id', async (req, res) => {
       newStatus = 'preparing';
     } else if (table.status === 'preparing') {
       newStatus = 'delivered';
-      table.orderStartTime = null; // ✅ Reset timer
+
+      // ✅ Move food to orderedFood
+      table.orderedFood = [...(table.orderedFood || []), ...table.food];
+
+      // ✅ Clear current food
+      table.food = [];
+
+      // ✅ Reset timer
+      table.orderStartTime = null;
     } else {
       return res.status(400).json({ success: false, message: 'Invalid status transition' });
     }
@@ -914,8 +938,6 @@ app.post('/chef/update-status/:id', async (req, res) => {
     res.status(500).json({ success: false });
   }
 });
-
-
 
 // GET dishes for a table (for chef popup)
 app.get('/api/chef/table-dishes/:id', async (req, res) => {

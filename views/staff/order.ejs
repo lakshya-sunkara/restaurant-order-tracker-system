@@ -226,10 +226,12 @@
    <div class="popup-box dish-popup">
   <button class="close-popup" onclick="closeDishPopup('<%= tableId %>')">✖</button>
 
-  <div class="tab-switch">
-    <button onclick="switchTab('taking')" id="tab-taking" class="active">Order Taking</button>
-    <button onclick="switchTab('taken')" id="tab-taken">Order Taken</button>
-  </div>
+ <div class="tab-switch">
+  <button onclick="switchTab('taking')" id="tab-taking" class="active">Order Taking</button>
+  <button onclick="switchTab('taken')" id="tab-taken">Order Taken</button>
+  <button onclick="switchTab('delivered')" id="tab-delivered">Delivered</button>
+</div>
+
 
   <!-- Tabs -->
   <div id="tab-taking-section" class="tab-section">
@@ -265,9 +267,17 @@
         <p id="orderSuccessMsg" style="color: green; text-align: center; font-weight: bold; margin-top: 10px; display: none;"></p>
     </div>
   </div>
+  <div id="tab-delivered-section" class="tab-section" style="display: none;">
+  <div class="selected-dishes" id="deliveredDishes">
+    <!-- Delivered dishes will render here -->
+  </div>
+</div>
 </div>
 
   </div>
+
+  
+
   
 
   <script>
@@ -386,33 +396,75 @@ function resetTable(tableId) {
 
 
   // Tab Switch Function
-  function switchTab(tab) {
-    document.getElementById('tab-taking-section').style.display = tab === 'taking' ? 'block' : 'none';
-    document.getElementById('tab-taken-section').style.display = tab === 'taken' ? 'block' : 'none';
+ function switchTab(tab) {
+  document.getElementById('tab-taking-section').style.display = tab === 'taking' ? 'block' : 'none';
+  document.getElementById('tab-taken-section').style.display = tab === 'taken' ? 'block' : 'none';
+  document.getElementById('tab-delivered-section').style.display = tab === 'delivered' ? 'block' : 'none';
 
-    document.getElementById('tab-taking').classList.toggle('active', tab === 'taking');
-    document.getElementById('tab-taken').classList.toggle('active', tab === 'taken');
+  document.getElementById('tab-taking').classList.toggle('active', tab === 'taking');
+  document.getElementById('tab-taken').classList.toggle('active', tab === 'taken');
+  document.getElementById('tab-delivered').classList.toggle('active', tab === 'delivered');
 
-    if (tab === 'taken') {
-      loadExistingOrder();
-    }
+  if (tab === 'taken') {
+    loadExistingOrder();
+  } else if (tab === 'delivered') {
+    loadDeliveredDishes();
   }
+}
+
 
   // Load existing food for table
-  function loadExistingOrder() {
-    fetch(`/api/table-food/<%= tableId %>`)
-      .then(res => res.json())
-      .then(data => {
-        const container = document.getElementById('existingDishes');
-        container.innerHTML = '';
-        if (!data || !data.length) {
-          container.innerHTML = "<p style='text-align:center;'>No dishes ordered yet.</p>";
-          return;
-        }
+ function loadExistingOrder() {
+  fetch(`/api/table-food/<%= tableId %>`)
+    .then(res => res.json())
+    .then(data => {
+      const ordered = data.ordered || [];
+      const container = document.getElementById('existingDishes');
+      container.innerHTML = '';
+      if (!ordered.length) {
+        container.innerHTML = "<p style='text-align:center;'>No dishes ordered yet.</p>";
+        return;
+      }
 
-        data.forEach(d => {
-          const item = document.createElement('div');
-          item.className = 'selected-dish-item';
+      ordered.forEach(d => {
+        const item = document.createElement('div');
+        item.className = 'selected-dish-item';
+        item.innerHTML = `
+          <img src="${d.image}" />
+          <div class="dish-info">
+            <div class="dish-header">
+              <strong class="dish-name">${d.name}</strong>
+              <span class="dish-price">₹${d.price}</span>
+            </div>
+            <div class="dish-actions">
+              <span style="font-size: 1rem; color: #444;">Qty: ${d.quantity}</span>
+            </div>
+          </div>
+        `;
+        container.appendChild(item);
+      });
+    })
+    .catch(err => {
+      console.error("Failed to load order:", err);
+    });
+}
+
+
+function loadDeliveredDishes() {
+  fetch(`/api/table-food/<%= tableId %>`)
+    .then(res => res.json())
+    .then(data => {
+      const delivered = data.delivered || [];
+      const container = document.getElementById('deliveredDishes');
+      container.innerHTML = '';
+      if (!delivered.length) {
+        container.innerHTML = "<p style='text-align:center;'>No delivered dishes.</p>";
+        return;
+      }
+      
+      delivered.forEach(d => {
+          const item = document.createElement("div");
+          item.className = "selected-dish-item";
           item.innerHTML = `
             <img src="${d.image}" />
             <div class="dish-info">
@@ -427,11 +479,12 @@ function resetTable(tableId) {
           `;
           container.appendChild(item);
         });
-      })
-      .catch(err => {
-        console.error("Failed to load order:", err);
-      });
-  }
+    })
+    .catch(err => {
+      console.error("Failed to load delivered dishes:", err);
+    });
+}
+
 function placeOrder(tableId) {
   if (selected.size === 0) {
     return alert("No dishes selected!");

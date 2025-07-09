@@ -5,6 +5,31 @@
   <title>Owner Dashboard - LakshyaFiesta</title>
   <link rel="stylesheet" href="/styles.css" />
   <link rel="icon" type="image/x-icon" href="/images/favicon.ico" />
+  <style>
+  .tab-switch {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 10px;
+    gap: 15px;
+  }
+  .tab-switch button {
+    padding: 6px 16px;
+    border: none;
+    background-color: #ddd;
+    cursor: pointer;
+    border-radius: 6px;
+  }
+  .tab-switch button.active {
+    background-color: orange;
+    color: white;
+    font-weight: bold;
+  }
+  .food-tab-section {
+    max-height: 350px;
+    overflow-y: auto;
+  }
+</style>
+
 </head>
 <body>
   <header class="restaurant-header">
@@ -49,22 +74,24 @@
   </form>
 </section>
 
-
 <div id="orderPopup" class="popup-overlay" style="display: none;">
-  <div class="popup-box dish-popup" style="max-height: 90vh; overflow-y: auto; position: relative; display: flex; flex-direction: column;">
+  <div class="popup-box dish-popup" style="max-height: 90vh;">
     <button class="close-popup" onclick="closeOrderPopup()">✖</button>
-    <h2 style="text-align:center;">🍽 Ordered Dishes</h2>
+    <h2 style="text-align:center;">🍽 Table Food</h2>
 
-    <!-- Dishes List -->
-    <div id="orderContent" class="selected-dishes" style="flex: 1 1 auto;"></div>
+    <div class="tab-switch">
+      <button onclick="switchFoodTab('ordered')" id="tab-ordered" class="active">Ordered</button>
+      <button onclick="switchFoodTab('delivered')" id="tab-delivered">Delivered</button>
+    </div>
 
-    <!-- Bill Button -->
+    <div id="orderedTab" class="food-tab-section"></div>
+    <div id="deliveredTab" class="food-tab-section" style="display:none;"></div>
+
     <div style="text-align: center; margin-top: 20px;">
       <button id="billButton" class="place-order-btn" style="display: none;" onclick="generateBill()">💵 Generate Bill</button>
     </div>
   </div>
 </div>
-
 
 
    <footer class="footer">
@@ -95,6 +122,15 @@
 </footer>
   
  <script>
+
+  function switchFoodTab(tab) {
+  document.getElementById("orderedTab").style.display = tab === 'ordered' ? 'block' : 'none';
+  document.getElementById("deliveredTab").style.display = tab === 'delivered' ? 'block' : 'none';
+
+  document.getElementById("tab-ordered").classList.toggle("active", tab === 'ordered');
+  document.getElementById("tab-delivered").classList.toggle("active", tab === 'delivered');
+}
+
     async function fetchTableData() {
       try {
         const res = await fetch('/api/tables');
@@ -206,44 +242,69 @@
   fetch(`/api/table-food/${tableId}`)
     .then(res => res.json())
     .then(data => {
-      const container = document.getElementById("orderContent");
+      const ordered = data.ordered || [];
+      const delivered = data.delivered || [];
+      console.log("Ordered items:", delivered);
+      const orderedTab = document.getElementById("orderedTab");
+      const deliveredTab = document.getElementById("deliveredTab");
       const billBtn = document.getElementById("billButton");
-      container.innerHTML = '';
-      billBtn.style.display = "none";
 
-      if (!data || data.length === 0) {
-        container.innerHTML = "<p style='text-align:center;'>No food ordered for this table.</p>";
-        return;
-      }
+      orderedTab.innerHTML = '';
+      deliveredTab.innerHTML = '';
+      billBtn.style.display = "none";
 
       let total = 0;
 
-      data.forEach(d => {
-        total += d.price * d.quantity;
-
-        const item = document.createElement("div");
-        item.className = "selected-dish-item";
-        item.innerHTML = `
-          <img src="${d.image}" />
-          <div class="dish-info">
-            <div class="dish-header">
-              <strong class="dish-name">${d.name}</strong>
-              <span class="dish-price">₹${d.price}</span>
+      if (ordered.length === 0) {
+        orderedTab.innerHTML = "<p style='text-align:center;'>No active orders.</p>";
+      } else {
+        ordered.forEach(d => {
+          total += d.price * d.quantity;
+          const item = document.createElement("div");
+          item.className = "selected-dish-item";
+          item.innerHTML = `
+            <img src="${d.image}" />
+            <div class="dish-info">
+              <div class="dish-header">
+                <strong class="dish-name">${d.name}</strong>
+                <span class="dish-price">₹${d.price}</span>
+              </div>
+              <div class="dish-actions">
+                <span style="font-size: 1rem; color: #444;">Qty: ${d.quantity}</span>
+              </div>
             </div>
-            <div class="dish-actions">
-              <span style="font-size: 1rem; color: #444;">Qty: ${d.quantity}</span>
-            </div>
-          </div>
-        `;
-        container.appendChild(item);
-      });
+          `;
+          orderedTab.appendChild(item);
+        });
+        billBtn.style.display = "inline-block";
+        billBtn.dataset.total = total;
+        billBtn.dataset.table = tableId;
+      }
 
-      // Show bill button with stored total
-      billBtn.style.display = "inline-block";
-      billBtn.dataset.total = total; // Store for later use
-      billBtn.dataset.table = tableId;
+      if (delivered.length === 0) {
+        deliveredTab.innerHTML = "<p style='text-align:center;'>No delivered items yet.</p>";
+      } else {
+        delivered.forEach(d => {
+          const item = document.createElement("div");
+          item.className = "selected-dish-item";
+          item.innerHTML = `
+            <img src="${d.image}" />
+            <div class="dish-info">
+              <div class="dish-header">
+                <strong class="dish-name">${d.name}</strong>
+                <span class="dish-price">₹${d.price}</span>
+              </div>
+              <div class="dish-actions">
+                <span style="font-size: 1rem; color: #444;">Qty: ${d.quantity}</span>
+              </div>
+            </div>
+          `;
+          deliveredTab.appendChild(item);
+        });
+      }
 
       document.getElementById("orderPopup").style.display = "flex";
+      switchFoodTab('ordered'); // Default to ordered tab
     })
     .catch(err => {
       console.error("❌ Failed to fetch table food:", err);
