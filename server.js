@@ -17,6 +17,7 @@ const Staff = require('./models/Staff');
 const ChefAuth = require('./models/ChefAuth');
 const StaffAuth = require('./models/StaffAuth');
 const Dish = require('./models/Dish');
+const Bill = require('./models/Bill');
 const Chef=require('./models/Chef');
 const multer = require('multer');
 const bcrypt = require('bcrypt');
@@ -963,6 +964,64 @@ const fullDetails = table.food.map(item => {
     res.status(500).json([]);
   }
 });
+
+
+app.post('/owner/generate-bill/:tableId', async (req, res) => {
+  try {
+   
+    const table = await Table.findById(req.params.tableId).lean();
+    if (!table) return res.status(404).json({ success: false, message: "Table not found" });
+
+    const deliveredItems = table.orderedFood || [];
+    const dishNos = deliveredItems.map(d => d.dishNo);
+    const dishes = await Dish.find({ dishNo: { $in: dishNos } }).lean();
+
+    const billItems = deliveredItems.map(item => {
+      const dish = dishes.find(d => d.dishNo === item.dishNo);
+      return {
+        dishNo: item.dishNo,
+        name: dish?.name || '',
+        price: dish?.price || 0,
+        quantity: item.quantity
+      };
+    });
+
+    const totalAmount = billItems.reduce((sum, d) => sum + d.price * d.quantity, 0);
+
+    const billNo = 'BILL-' + Date.now();
+
+    const newBill = new Bill({
+      billNo,
+      date: new Date(),
+      tableNo: table.tableNo,
+      serverName: table.serverName,
+      serverEmail: table.serverEmail,
+      dishes: billItems,
+      totalAmount
+     
+    });
+
+    await newBill.save();
+
+    // ✅ Clear orderedFood and reset table
+    await Table.findByIdAndUpdate(req.params.tableId, {
+      status: 'empty',
+      serverName: null,
+      serverEmail: null,
+      serverImage: null,
+      orderStartTime: null,
+      food: [],
+      orderedFood: [],
+    });
+
+    res.json({ success: true, bill: newBill });
+
+  } catch (err) {
+    console.error("❌ Error generating bill:", err);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
 
 app.get('/chef/logout', (req, res) => {
   req.session.chefLoggedIn = false;

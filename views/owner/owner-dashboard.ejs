@@ -248,6 +248,7 @@
       const orderedTab = document.getElementById("orderedTab");
       const deliveredTab = document.getElementById("deliveredTab");
       const billBtn = document.getElementById("billButton");
+      billBtn.dataset.table = tableId;
 
       orderedTab.innerHTML = '';
       deliveredTab.innerHTML = '';
@@ -276,7 +277,7 @@
           `;
           orderedTab.appendChild(item);
         });
-        billBtn.style.display = "inline-block";
+        
         billBtn.dataset.total = total;
         billBtn.dataset.table = tableId;
       }
@@ -301,9 +302,11 @@
           `;
           deliveredTab.appendChild(item);
         });
+        billBtn.style.display = "inline-block";
       }
 
       document.getElementById("orderPopup").style.display = "flex";
+      document.getElementById("orderedTab").style.display = "block";
       switchFoodTab('ordered'); // Default to ordered tab
     })
     .catch(err => {
@@ -315,6 +318,49 @@
 function closeOrderPopup() {
   document.getElementById("orderPopup").style.display = "none";
 }
+
+
+
+function generateBill() {
+  const tableId = document.getElementById("billButton").dataset.table;
+
+  fetch(`/owner/generate-bill/${tableId}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({}) // No paymentMode sent
+  })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        const bill = data.bill;
+        const popupBox = document.querySelector('.popup-box');
+        popupBox.innerHTML = `
+          <button class="close-popup" onclick="closeOrderPopup()">✖</button>
+          <h2>🧾 Bill Receipt</h2>
+          <p><strong>Bill No:</strong> ${bill.billNo}</p>
+          <p><strong>Date:</strong> ${new Date(bill.date).toLocaleString()}</p>
+          <p><strong>Table:</strong> ${bill.tableNo}</p>
+          <p><strong>Server:</strong> ${bill.serverName}</p>
+          <hr>
+          ${bill.dishes.map(d => `
+            <p>${d.name} (x${d.quantity}) - ₹${d.price * d.quantity}</p>
+          `).join('')}
+          <hr>
+          <p><strong>Total:</strong> ₹${bill.totalAmount}</p>
+          <div style="text-align:center; margin-top: 10px;">
+            <button onclick="window.print()" class="place-order-btn">🖨 Print</button>
+          </div>
+        `;
+      } else {
+        alert("❌ " + data.message);
+      }
+    })
+    .catch(err => {
+      console.error("Error creating bill:", err);
+      alert("❌ Failed to create bill");
+    });
+}
+
 
   </script>
  
