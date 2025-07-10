@@ -8,22 +8,22 @@
     <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
 </head>
 <body>
-    <section>
-        <!-- Replace these lines -->
-<a href="/" class="button-link">Go to Home Page</a>
-<a href="/owner/owner-login" class="button-link">Login Again</a>
 
-<!-- With this conditional -->
-
-
-<% if (userType === 'Chef') { %>
-  <a href="/chef/login" class="button-link">Chef Login Again</a>
-<% } else if (userType === 'Staff') { %>
-  <a href="/staff/staff-login" class="button-link">Staff Login Again</a>
-<% } else { %>
-  <a href="/owner/owner-login" class="button-link">Owner Login Again</a>
-<% } %>
-
-    </section>
+  <header class="restaurant-header">
+  <div class="logo-container">
+    <img src="/images/Lakshya_logo.jpg" alt="LakshyaFiesta Logo" class="logo" />
+    <h1 class="restaurant-name">LakshyaFiesta</h1>
+  </div>
+</header>
+     <section class="login-section">
+    <div class="login-box">
+      <h2>You have been logged out</h2>
+      <p>Thank you for using <strong>LakshyaFiesta</strong>.</p>
+      <div style="margin-top: 20px;">
+        <a href="/" class="button-link">Go to Home Page</a>
+        <a href="/chef-login" class="button-link">Chef Login Again</a>
+      </div>
+    </div>
+  </section>
 </body>
 </html>
