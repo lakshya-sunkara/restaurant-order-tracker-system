@@ -28,6 +28,16 @@
     max-height: 350px;
     overflow-y: auto;
   }
+  .place-order-btn {
+  padding: 8px 16px;
+  background: orange;
+  border: none;
+  color: white;
+  font-weight: bold;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
 </style>
 
 </head>
@@ -327,7 +337,7 @@ function generateBill() {
   fetch(`/owner/generate-bill/${tableId}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({}) // No paymentMode sent
+    body: JSON.stringify({}) // no paymentMode yet
   })
     .then(res => res.json())
     .then(data => {
@@ -336,20 +346,69 @@ function generateBill() {
         const popupBox = document.querySelector('.popup-box');
         popupBox.innerHTML = `
           <button class="close-popup" onclick="closeOrderPopup()">✖</button>
-          <h2>🧾 Bill Receipt</h2>
-          <p><strong>Bill No:</strong> ${bill.billNo}</p>
-          <p><strong>Date:</strong> ${new Date(bill.date).toLocaleString()}</p>
-          <p><strong>Table:</strong> ${bill.tableNo}</p>
-          <p><strong>Server:</strong> ${bill.serverName}</p>
-          <hr>
-          ${bill.dishes.map(d => `
-            <p>${d.name} (x${d.quantity}) - ₹${d.price * d.quantity}</p>
-          `).join('')}
-          <hr>
-          <p><strong>Total:</strong> ₹${bill.totalAmount}</p>
-          <div style="text-align:center; margin-top: 10px;">
-            <button onclick="window.print()" class="place-order-btn">🖨 Print</button>
+          <div style="text-align: center;">
+            <h2 style="color: orange; margin-bottom: 5px;">Restaurant Receipt</h2>
+            <p style="margin: 0;">LakshyaFiesta</p>
+            <div style="text-align:center;">
+    <img src="https://res.cloudinary.com/de98eawax/image/upload/v1752140324/Lakshya_logo_umcfit.jpg" alt="LakshyaFiesta Logo" style="width: 150px; margin-bottom: 10px;" />
+  </div>
+            <p style="margin: 0;">MG Road, Hyderabad, India</p>
+            <p style="margin: 0;">+91 81859 51583</p>
+            <p style="margin-bottom: 10px;">lakshyasunkara2004@gmail.com</p>
           </div>
+
+          <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+            <div><strong>Receipt No:</strong> ${bill.billNo}</div>
+            <div><strong>Date:</strong> ${new Date(bill.date).toLocaleDateString()}</div>
+            <div><strong>Time:</strong> ${new Date(bill.date).toLocaleTimeString()}</div>
+          </div>
+
+          <div style="margin-bottom: 10px;">
+            <strong>Table:</strong> ${bill.tableNo} |
+            <strong>Server:</strong> ${bill.serverName} (${bill.serverEmail})
+          </div>
+
+          <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+            <thead>
+              <tr style="background-color: #ffa50033;">
+                <th style="text-align:left; padding: 5px;">Item</th>
+                <th>Qty</th>
+                <th>Dish Price</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${bill.dishes.map(d => `
+                <tr>
+                  <td style="padding: 4px 6px;">${d.name}</td>
+                  <td style="text-align:center;">${d.quantity}</td>
+                  <td style="text-align:center;">₹${d.price}</td>
+                  <td style="text-align:right;">₹${d.quantity * d.price}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+
+          <hr style="margin-top: 10px;" />
+          <p style="text-align:right;"><strong>Total Amount:</strong> ₹${bill.totalAmount}</p>
+
+          <div style="margin-top: 10px; text-align:center;">
+            <label for="paymentMode"><strong>Payment Mode:</strong></label>
+            <select id="paymentMode" style="padding: 5px; margin-left: 10px;">
+              <option value="Cash">Cash</option>
+              <option value="Card">Card</option>
+              <option value="UPI">UPI</option>
+              <option value="Online">Online</option>
+            </select>
+          </div>
+
+          <div style="text-align:center; margin-top: 15px;">
+            <button onclick="window.print()" class="place-order-btn">🖨 Print</button>
+           <button onclick="updatePaymentMode('${bill.billNo}')" class="place-order-btn">✅ Done</button>
+
+          </div>
+
+          <p style="text-align:center; margin-top: 10px;"><em>Eat As Much As You Like!</em></p>
         `;
       } else {
         alert("❌ " + data.message);
@@ -360,6 +419,31 @@ function generateBill() {
       alert("❌ Failed to create bill");
     });
 }
+
+function updatePaymentMode(billNo) {
+  const mode = document.getElementById("paymentMode").value;
+
+  fetch(`/owner/update-payment/${billNo}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ paymentMode: mode })
+  })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        alert("✅ Payment mode saved!");
+        closeOrderPopup(); // or refresh UI if needed
+      } else {
+        alert("❌ " + data.message);
+      }
+    })
+    .catch(err => {
+      console.error("Error updating payment mode:", err);
+      alert("❌ Failed to update payment mode");
+    });
+}
+
+
 
 
   </script>

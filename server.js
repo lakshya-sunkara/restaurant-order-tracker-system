@@ -575,8 +575,12 @@ app.get('/staff/order/:tableId', async (req, res) => {
   try {
     const tableId = req.params.tableId;
     const dishes = await Dish.find();
-
+    const table = await Table.findById(req.params.tableId);
+    if (!table) return res.status(404).json({ error: 'Table not found' });
    
+    if(table.status === 'empty') {
+      return res.redirect('/staff/staff-dashboard');
+      }
 
     const categories = [...new Set(dishes.map(d => d.category))];
     const dishesByCategory = categories.map(cat => ({
@@ -898,8 +902,12 @@ app.get('/chef-dashboard', async (req, res) => {
   if (!req.session.isChefLoggedIn) {
     return res.redirect('/chef-login');
   }
+  const chef = await Chef.findOne({ email: req.session.chefEmail });
+  if (!chef) return res.redirect('/chef-login');
+
+  
    
-    res.render('chef/chef-dashboard', { email: req.session.chefEmail  });
+    res.render('chef/chef-dashboard', {chef, email: req.session.chefEmail  });
   
 });
 
@@ -1019,6 +1027,30 @@ app.post('/owner/generate-bill/:tableId', async (req, res) => {
   } catch (err) {
     console.error("❌ Error generating bill:", err);
     res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+
+
+app.post('/owner/update-payment/:billNo', async (req, res) => {
+  try {
+    const { billNo } = req.params;
+    const { paymentMode } = req.body;
+
+    const updatedBill = await Bill.findOneAndUpdate(
+      { billNo },
+      { paymentMode },
+      { new: true }
+    );
+
+    if (!updatedBill) {
+      return res.status(404).json({ success: false, message: "Bill not found" });
+    }
+
+    res.json({ success: true, message: "Payment mode updated", bill: updatedBill });
+  } catch (err) {
+    console.error("Error updating payment mode:", err);
+    res.status(500).json({ success: false, message: "Server error" });
   }
 });
 
