@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Bill Analytics</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="/styles.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+    
+      background: #f8f8f8;
+    }
+
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+
+    .chart-container {
+      max-width: 1200px;
+      width:800px;
+      margin: auto;
+      padding: 30px;
+      background: #fff;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+      border-radius: 12px;
+    }
+  </style>
+</head>
+<body>
+    <header class="restaurant-header">
+    <div class="logo-container">
+      <div class="menu-icon-block" onclick="toggleDropdown()">
+        <span class="menu-icon">☰</span>
+      </div>
+      <img src="/images/Lakshya_logo.jpg" alt="LakshyaFiesta Logo" class="logo" />
+      <h1 class="restaurant-name">LakshyaFiesta Owner Dashboard</h1>
+    </div>
+    
+    <nav class="dropdown" id="dropdownMenu">
+        <a href="/owner/owner-dashboard">DashBoard</a>
+      <a href="/owner/add-staff">Add Staff</a>
+      <a href="/owner/add-dish">Add Dish</a>
+      <a href="/owner/manage-staff">Manage Staff</a>
+      <a href="/owner/bill-history" class="btn">Bill History</a>
+      
+
+
+      <a href="/owner/logout">Logout</a>
+    </nav>
+  </header>
+
+
+  <h1>📊 Orders Per Day</h1>
+  <div class="chart-container">
+    <canvas id="orderChart" data-chart='<%- JSON.stringify(chartData) %>'></canvas>
+
+  </div>
+
+  <script >
+    function toggleDropdown() {
+      const d = document.getElementById("dropdownMenu");
+      d.style.display = d.style.display === "flex" ? "none" : "flex";
+    }
+
+    window.addEventListener('click', function (e) {
+      const dropdown = document.getElementById('dropdownMenu');
+      const icon = document.querySelector('.menu-icon-block');
+      if (!dropdown.contains(e.target) && !icon.contains(e.target)) {
+        dropdown.style.display = 'none';
+      }
+    });
+
+    const chartData = JSON.parse(document.getElementById('orderChart').dataset.chart);
+
+
+
+    const labels = chartData.map(d => d._id);
+    const values = chartData.map(d => d.totalOrders);
+
+    const ctx = document.getElementById('orderChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          label: 'No. of Orders',
+          data: values,
+          backgroundColor: 'rgba(255, 165, 0, 0.2)',
+          borderColor: 'orange',
+          borderWidth: 2,
+          fill: true,
+          tension: 0.3
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: {
+            beginAtZero: true,
+            title: {
+              display: true,
+              text: 'Orders'
+            }
+          },
+          x: {
+            title: {
+              display: true,
+              text: 'Date'
+            }
+          }
+        }
+      }
+    });
+  </script>
+</body>
+</html>

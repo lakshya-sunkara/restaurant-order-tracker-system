@@ -1055,6 +1055,47 @@ app.post('/owner/update-payment/:billNo', async (req, res) => {
 });
 
 
+// GET: Show bills for today or specific date
+app.get('/owner/bill-history', async (req, res) => {
+  try {
+    const selectedDate = req.query.date ? new Date(req.query.date) : new Date();
+
+    // Set time range from start to end of selected date
+    const start = new Date(selectedDate.setHours(0, 0, 0, 0));
+    const end = new Date(selectedDate.setHours(23, 59, 59, 999));
+
+    const bills = await Bill.find({
+      date: { $gte: start, $lte: end }
+    }).sort({ date: -1 });
+
+    res.render('owner/bill-history', { bills, selectedDate: req.query.date || new Date().toISOString().split('T')[0] });
+  } catch (err) {
+    console.error("Error fetching bills:", err);
+    res.status(500).send("Server error");
+  }
+});
+
+
+app.get('/owner/bill-analytics', async (req, res) => {
+  try {
+    const data = await Bill.aggregate([
+      {
+        $group: {
+          _id: {
+            $dateToString: { format: "%Y-%m-%d", date: "$date" }
+          },
+          totalOrders: { $sum: 1 }
+        }
+      },
+      { $sort: { _id: 1 } }
+    ]);
+
+    res.render('owner/bill-analytics', {  chartData: data });
+  } catch (err) {
+    console.error("Error loading bill analytics:", err);
+    res.status(500).send("Server Error");
+  }
+});
 app.get('/chef/logout', (req, res) => {
   req.session.chefLoggedIn = false;
   req.session.chefEmail = null;
