@@ -106,15 +106,12 @@ const OWNER_EMAIL = 'sunkarassnaidu@gmail.com';
 const OWNER_PASSWORD = 'Sunkara@2004';
 
 const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 465,
-  secure: true,
+  service: 'gmail',
   auth: {
-    user: "sunkarassnaidu@gmail.com",
-    pass: process.env.GMAIL_APP_PASSWORD
+    user: 'sunkarassnaidu@gmail.com',
+    pass: process.env.GMAIL_APP_PASSWORD 
   }
 });
-
 
 async function notifyOwner(subject, message) {
   try {
