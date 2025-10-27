@@ -106,12 +106,15 @@ const OWNER_EMAIL = 'sunkarassnaidu@gmail.com';
 const OWNER_PASSWORD = 'Sunkara@2004';
 
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  host: "smtp-relay.brevo.com",
+  port: 587,
+  secure: false, // use TLS
   auth: {
-    user: 'sunkarassnaidu@gmail.com',
-    pass: process.env.GMAIL_APP_PASSWORD 
+    user: process.env.BREVO_USER, // your Brevo email
+    pass: process.env.BREVO_PASS  // your Brevo API key
   }
 });
+
 
 async function notifyOwner(subject, message) {
   try {
