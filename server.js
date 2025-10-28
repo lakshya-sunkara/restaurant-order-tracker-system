@@ -7,7 +7,8 @@ const dotEnv = require('dotenv');
 const {MongoClient} = require('mongodb');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const port=process.env.port || 2004
+const port = process.env.PORT || 2004;
+
 const ejs = require('ejs');
 const session = require('express-session');
 const nodemailer = require('nodemailer');
@@ -29,7 +30,8 @@ const Table = require('./models/Table');
 app.set('view engine', 'ejs');
 app.use(express.static('public'));
 
-dotEnv.config();
+require('dotenv').config();
+
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 const store=new MongoDBStore({
@@ -106,10 +108,17 @@ const OWNER_EMAIL = 'sunkarassnaidu@gmail.com';
 const OWNER_PASSWORD = 'Sunkara@2004';
 
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  service: "gmail",
   auth: {
-    user: "sunkarassnaidu@gmail.com",
-    pass: "kcvx elnf afuk dmaj"
+    user: process.env.GMAIL_USER,
+    pass: process.env.GMAIL_PASS,
+  },
+});
+transporter.verify((error, success) => {
+  if (error) {
+    console.error("❌ SMTP connection failed:", error);
+  } else {
+    console.log("✅ SMTP connected successfully!");
   }
 });
 
